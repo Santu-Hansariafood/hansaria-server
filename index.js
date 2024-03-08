@@ -8,6 +8,7 @@ const Transport = require("./models/transportModel");
 const Buyercompany = require("./models/buyercompanyModel");
 const FinanceMastar = require("./models/financeMasterModel");
 const Register = require("./models/register");
+const EmployeeRegister = require("./models/employeeRegisterModel");
 const app = express();
 
 app.use(express.json());
@@ -437,6 +438,81 @@ app.delete("/register/:id", async (req, res) => {
         .json({ message: `cannot find any register with ID ${id}` });
     }
     res.status(200).json(register);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// EmployeeRegister
+
+app.post("/employeeRegister", async (req, res) => {
+  try {
+    const employeeRegister = await EmployeeRegister.create(req.body);
+    res.status(200).json(employeeRegister);
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+});
+
+// GET employeeRegister
+
+app.get("/employeeRegister", async (req, res) => {
+  try {
+    const employeeRegister = await EmployeeRegister.find({});
+    res.status(200).json(employeeRegister);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+//find the employeeRegister by  its ID
+
+app.get("/employeeRegister/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const employeeRegister = await EmployeeRegister.findById(id);
+    res.status(200).json(employeeRegister);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+//update the employeeRegister in to the Buyercompany
+
+app.put("/employeeRegister/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const employeeRegister = await EmployeeRegister.findByIdAndUpdate(
+      id,
+      req.body
+    );
+    if (!employeeRegister) {
+      return res
+        .status(404)
+        .json({ message: `cannot find any Register with ID ${id}` });
+    }
+    const updatedemployeeRegister = await EmployeeRegister.findById(id);
+    res.status(200).json(updatedemployeeRegister);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Delete a employeeRegister
+
+app.delete("/employeeRegister/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const employeeRegister = await EmployeeRegister.findByIdAndDelete(id);
+    if (!employeeRegister) {
+      return res
+        .status(404)
+        .json({ message: `cannot find any register with ID ${id}` });
+    }
+    res.status(200).json(employeeRegister);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
