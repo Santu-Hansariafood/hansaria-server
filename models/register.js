@@ -11,6 +11,7 @@ const registerSchema = mongoose.Schema({
   },
   mobile: {
     type: String,
+    required: true,
   },
   email: {
     type: String,
@@ -28,6 +29,7 @@ const registerSchema = mongoose.Schema({
   },
   address: {
     type: String,
+    required: true
   },
   state: {
     type: String,
@@ -40,6 +42,7 @@ const registerSchema = mongoose.Schema({
   },
   pinCode: {
     type: String,
+    required: true
   },
   role: {
     type: String,
@@ -60,10 +63,21 @@ const registerSchema = mongoose.Schema({
   bankName: {
     type: String,
   },
-  image: {
-    data: Buffer,
-    contentType: String,
-  }
+  adharCard: {
+    type: String,
+  },
+  panCard: {
+    type: String,
+  },
+  gstCard: {
+    type: String,
+  },
+  passCard: {
+    type: String,
+  },
+  profile: {
+    type: String,
+  },
 });
 
 const Register = mongoose.model("Register", registerSchema);

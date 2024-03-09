@@ -2,6 +2,8 @@ require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const multer=require('multer');
+const path = require('path');
 const Product = require("./models/productModel");
 const Suppliers = require("./models/suppliersModel");
 const Transport = require("./models/transportModel");
@@ -9,11 +11,24 @@ const Buyercompany = require("./models/buyercompanyModel");
 const FinanceMastar = require("./models/financeMasterModel");
 const Register = require("./models/register");
 const EmployeeRegister = require("./models/employeeRegisterModel");
+const RegisterPhoto = require("./models/registerPhoto")
 const app = express();
 
 app.use(express.json());
 app.use(cors());
 const PORT = process.env.PORT || 3000;
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, path.join(__dirname, 'uploads')); 
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + '-' + file.originalname);
+  }
+});
+
+const upload = multer({ storage: storage });
+
 // -------product API Start------
 // find all product
 
@@ -517,6 +532,32 @@ app.delete("/employeeRegister/:id", async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
+// register photo uploaded
+
+app.post("/registerPhoto", async (req, res) => {
+  const body = req.body;
+  try{
+      const newImage = await RegisterPhoto.create(body)
+      newImage.save();
+      res.status(201).json({ msg : "New image uploaded...!"})
+  }catch(error){
+      res.status(409).json({ message : error.message })
+  }
+})
+
+
+app.get('/registerPhoto', (req, res) => {
+  try{
+      RegisterPhoto.find({}).then(data => {
+          res.json(data)
+      }).catch(error => {
+          res.status(408).json({ error })
+      })
+  }catch(error){
+      res.json({error})
+  }
+})
 
 mongoose.set("strictQuery", false);
 mongoose
