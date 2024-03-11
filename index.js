@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const multer=require('multer');
 const path = require('path');
+var fs = require('fs');
 const Product = require("./models/productModel");
 const Suppliers = require("./models/suppliersModel");
 const Transport = require("./models/transportModel");
@@ -18,16 +19,19 @@ app.use(express.json());
 app.use(cors());
 const PORT = process.env.PORT || 3000;
 
+// Multer storage configuration
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, 'uploads')); 
+    cb(null, path.join(__dirname, "uploads"));
   },
   filename: function (req, file, cb) {
-    cb(null, Date.now() + '-' + file.originalname);
-  }
+    cb(null, Date.now() + "-" + file.originalname);
+  },
 });
 
 const upload = multer({ storage: storage });
+
+
 
 // -------product API Start------
 // find all product
@@ -535,29 +539,74 @@ app.delete("/employeeRegister/:id", async (req, res) => {
 
 // register photo uploaded
 
-app.post("/registerPhoto", async (req, res) => {
-  const body = req.body;
-  try{
-      const newImage = await RegisterPhoto.create(body)
-      newImage.save();
-      res.status(201).json({ msg : "New image uploaded...!"})
-  }catch(error){
-      res.status(409).json({ message : error.message })
-  }
-})
+// app.post("/registerPhoto", async (req, res) => {
+//   const body = req.body;
+//   try{
+//       const newImage = await RegisterPhoto.create(body)
+//       newImage.save();
+//       res.status(201).json({ msg : "New image uploaded...!"})
+//   }catch(error){
+//       res.status(409).json({ message : error.message })
+//   }
+// })
 
 
-app.get('/registerPhoto', (req, res) => {
-  try{
-      RegisterPhoto.find({}).then(data => {
-          res.json(data)
-      }).catch(error => {
-          res.status(408).json({ error })
-      })
-  }catch(error){
-      res.json({error})
+// app.get('/registerPhoto', (req, res) => {
+//   try{
+//       RegisterPhoto.find({}).then(data => {
+//           res.json(data)
+//       }).catch(error => {
+//           res.status(408).json({ error })
+//       })
+//   }catch(error){
+//       res.json({error})
+//   }
+// })
+
+
+// Endpoint for uploading photos
+// app.post("/registerPhoto", upload.single("file"), async (req, res) => {
+//   const body = req.body;
+//   try {
+//     const newImage = await RegisterPhoto.create(body);
+//     newImage.save();
+//     res.status(201).json({ msg: "New image uploaded...!" });
+//   } catch (error) {
+//     res.status(409).json({ message: error.message });
+//   }
+// });
+
+app.post("/registerPhoto", upload.fields([
+  { name: 'aadhaarCard', maxCount: 1 },
+  { name: 'panCard', maxCount: 1 },
+  { name: 'gstCertificate', maxCount: 1 },
+  { name: 'bankAccount', maxCount: 1 },
+  { name: 'profilePhoto', maxCount: 1 }
+]), async (req, res) => {
+  try {
+    const files = req.files;
+    // Process each file as needed
+    const uploadedFiles = {};
+    Object.keys(files).forEach(fieldName => {
+      uploadedFiles[fieldName] = files[fieldName][0].filename;
+    });
+    // Save the filenames to the database or perform any other actions you need
+    res.status(201).json({ msg: "New images uploaded successfully!", files: uploadedFiles });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
-})
+});
+
+// Endpoint for retrieving photos
+app.get("/registerPhoto", async (req, res) => {
+  try {
+    const photos = await RegisterPhoto.find({});
+    res.status(200).json(photos);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 
 mongoose.set("strictQuery", false);
 mongoose

@@ -21,7 +21,7 @@ const registerPhotoSchema = mongoose.Schema({
         type:String, 
         required:true
     },
-})
+});
 
 const RegisterPhoto = mongoose.model("RegisterPhoto", registerPhotoSchema);
 
