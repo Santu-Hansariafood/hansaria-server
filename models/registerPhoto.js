@@ -3,23 +3,23 @@ const mongoose = require("mongoose");
 const registerPhotoSchema = mongoose.Schema({
     aadhaarCard:{
         type:String, 
-        required:true
+        //required:true
     },
     panCard:{
         type:String, 
-        required:true
+        //required:true
     },
     gstCertificate:{
         type:String, 
-        required:true
+        //required:true
     },
     bankAccount:{
         type:String, 
-        required:true
+        //required:true
     },
     profilePhoto:{
         type:String, 
-        required:true
+        //required:true
     },
 });
 

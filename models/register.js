@@ -11,25 +11,25 @@ const registerSchema = mongoose.Schema({
   },
   mobile: {
     type: String,
-    required: true,
+    //required: true,
   },
   email: {
     type: String,
   },
   adharNumber: {
     type: String,
-    required: true,
+    //required: true,
   },
   panCardNumber: {
     type: String,
-    required: true,
+    //required: true,
   },
   gstNumber: {
     type: String,
   },
   address: {
     type: String,
-    required: true
+    //required: true
   },
   state: {
     type: String,
@@ -42,11 +42,15 @@ const registerSchema = mongoose.Schema({
   },
   pinCode: {
     type: String,
-    required: true
+    //required: true
   },
   role: {
     type: String,
     enum: ["admin", "buyer", "farmer"],
+  },
+  farmerDeals: {
+    type: String,
+    enum: ["maize", "wheat", "rice", "soyabean"],
   },
   account: {
     type: String,
@@ -64,19 +68,24 @@ const registerSchema = mongoose.Schema({
     type: String,
   },
   adharCard: {
-    type: String,
+    type: Buffer,
+    contentType: "image/png" | "image/jpeg",
   },
   panCard: {
-    type: String,
+    type: Buffer,
+    contentType: "image/png" | "image/jpeg",
   },
   gstCard: {
-    type: String,
+    type: Buffer,
+    contentType: "image/png" | "image/jpeg",
   },
   passCard: {
-    type: String,
+    type: Buffer,
+    contentType: "image/png" | "image/jpg",
   },
-  profile: {
-    type: String,
+  farmarPhoto: {
+    type: Buffer,
+    contentType: "image/png" | "image/jpeg",
   },
 });
 

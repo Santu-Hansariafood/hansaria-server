@@ -2,9 +2,8 @@ require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-const multer=require('multer');
-const path = require('path');
-var fs = require('fs');
+const multer = require("multer");
+const path = require("path");
 const Product = require("./models/productModel");
 const Suppliers = require("./models/suppliersModel");
 const Transport = require("./models/transportModel");
@@ -12,29 +11,16 @@ const Buyercompany = require("./models/buyercompanyModel");
 const FinanceMastar = require("./models/financeMasterModel");
 const Register = require("./models/register");
 const EmployeeRegister = require("./models/employeeRegisterModel");
-const RegisterPhoto = require("./models/registerPhoto")
+const RegisterPhoto = require("./models/registerPhoto");
+const RegisterStore = require("./models/registerStoreModel");
 const app = express();
 
 app.use(express.json());
 app.use(cors());
 const PORT = process.env.PORT || 3000;
 
-// Multer storage configuration
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, "uploads"));
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + "-" + file.originalname);
-  },
-});
-
+const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
-
-
-
-// -------product API Start------
-// find all product
 
 app.get("/product", async (req, res) => {
   try {
@@ -390,19 +376,64 @@ app.delete("/financeMaster/:id", async (req, res) => {
 
 //---End of Buyercompany API ---
 
-// Register
+// Register for farmer
 
-app.post("/register", async (req, res) => {
-  try {
-    const register = await Register.create(req.body);
-    res.status(200).json(register);
-  } catch (error) {
-    console.log(error.message);
-    res.status(500).json({
-      message: error.message,
-    });
+// app.post("/register", async (req, res) => {
+//   try {
+//     const register = await Register.create(req.body);
+//     res.status(200).json(register);
+//   } catch (error) {
+//     console.log(error.message);
+//     res.status(500).json({
+//       message: error.message,
+//     });
+//   }
+// });
+
+app.post(
+  "/register",
+  upload.fields([
+    { name: "adharCard", maxCount: 1 },
+    { name: "panCard", maxCount: 1 },
+    { name: "gstCard", maxCount: 1 },
+    { name: "passCard", maxCount: 1 },
+    { name: "farmarPhoto", maxCount: 1 },
+  ]),
+  async (req, res) => {
+    try {
+      // Check if all required files are present
+      const requiredFiles = ["adharCard", "panCard", "gstCard", "passCard", "farmarPhoto"];
+      for (const file of requiredFiles) {
+        if (!req.files[file]) {
+          return res.status(400).json({ message: `${file} is required` });
+        }
+      }
+
+      // Access file buffers and assign them to respective fields
+      const adharCard = req.files["adharCard"][0].buffer;
+      const panCard = req.files["panCard"][0].buffer;
+      const gstCard = req.files["gstCard"][0].buffer;
+      const passCard = req.files["passCard"][0].buffer;
+      const farmarPhoto = req.files["farmarPhoto"][0].buffer;
+
+      // Create a new Register document
+      const register = await Register.create({
+        ...req.body,
+        adharCard: adharCard,
+        panCard: panCard,
+        gstCard: gstCard,
+        passCard: passCard,
+        farmarPhoto: farmarPhoto,
+      });
+
+      res.status(200).json(register);
+    } catch (error) {
+      console.log(error.message);
+      res.status(500).json({ message: error.message });
+    }
   }
-});
+);
+
 
 // GET register
 
@@ -417,10 +448,30 @@ app.get("/register", async (req, res) => {
 
 //find the register by  its ID
 
+// app.get("/register/:id", async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const register = await Register.findById(id);
+//     res.status(200).json(register);
+//   } catch (error) {
+//     res.status(500).json({ message: error.message });
+//   }
+// });
+
 app.get("/register/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const register = await Register.findById(id);
+    if (!register) {
+      return res.status(404).json({ message: "Register not found" });
+    }
+    // If imagePath exists, assume it's a path to the image
+    if (register.imagePath) {
+      // Construct the absolute path to the image
+      const absolutePath = path.join(__dirname, 'public', register.imagePath); // Assuming images are stored in a 'public' directory
+      // Add imagePath to the register object before sending JSON response
+      register.imagePath = absolutePath;
+    }
     res.status(200).json(register);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -537,67 +588,36 @@ app.delete("/employeeRegister/:id", async (req, res) => {
   }
 });
 
-// register photo uploaded
+app.post(
+  "/registerPhoto",
+  upload.fields([
+    { name: "aadhaarCard", maxCount: 1 },
+    { name: "panCard", maxCount: 1 },
+    { name: "gstCertificate", maxCount: 1 },
+    { name: "bankAccount", maxCount: 1 },
+    { name: "profilePhoto", maxCount: 1 },
+  ]),
+  async (req, res) => {
+    try {
+      const files = req.files;
 
-// app.post("/registerPhoto", async (req, res) => {
-//   const body = req.body;
-//   try{
-//       const newImage = await RegisterPhoto.create(body)
-//       newImage.save();
-//       res.status(201).json({ msg : "New image uploaded...!"})
-//   }catch(error){
-//       res.status(409).json({ message : error.message })
-//   }
-// })
-
-
-// app.get('/registerPhoto', (req, res) => {
-//   try{
-//       RegisterPhoto.find({}).then(data => {
-//           res.json(data)
-//       }).catch(error => {
-//           res.status(408).json({ error })
-//       })
-//   }catch(error){
-//       res.json({error})
-//   }
-// })
-
-
-// Endpoint for uploading photos
-// app.post("/registerPhoto", upload.single("file"), async (req, res) => {
-//   const body = req.body;
-//   try {
-//     const newImage = await RegisterPhoto.create(body);
-//     newImage.save();
-//     res.status(201).json({ msg: "New image uploaded...!" });
-//   } catch (error) {
-//     res.status(409).json({ message: error.message });
-//   }
-// });
-
-app.post("/registerPhoto", upload.fields([
-  { name: 'aadhaarCard', maxCount: 1 },
-  { name: 'panCard', maxCount: 1 },
-  { name: 'gstCertificate', maxCount: 1 },
-  { name: 'bankAccount', maxCount: 1 },
-  { name: 'profilePhoto', maxCount: 1 }
-]), async (req, res) => {
-  try {
-    const files = req.files;
-    // Process each file as needed
-    const uploadedFiles = {};
-    Object.keys(files).forEach(fieldName => {
-      uploadedFiles[fieldName] = files[fieldName][0].filename;
-    });
-    // Save the filenames to the database or perform any other actions you need
-    res.status(201).json({ msg: "New images uploaded successfully!", files: uploadedFiles });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+      const uploadedFiles = {};
+      Object.keys(files).forEach((fieldName) => {
+        uploadedFiles[fieldName] = files[fieldName][0].filename;
+      });
+      const registerPhoto = await RegisterPhoto.create(uploadedFiles);
+      res
+        .status(201)
+        .json({
+          msg: "New images uploaded successfully!",
+          files: registerPhoto,
+        });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
   }
-});
+);
 
-// Endpoint for retrieving photos
 app.get("/registerPhoto", async (req, res) => {
   try {
     const photos = await RegisterPhoto.find({});
@@ -607,6 +627,75 @@ app.get("/registerPhoto", async (req, res) => {
   }
 });
 
+// register store API
+
+app.post("/registerStore", async (req, res) => {
+  try {
+    const registerStore = await RegisterStore.create(req.body);
+    res.status(200).json(registerStore);
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+});
+
+app.get("/registerStore", async (req, res) => {
+  try {
+    const registerStore = await RegisterStore.find({});
+    res.status(200).json(registerStore);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+//find the register by  its ID
+
+app.get("/registerStore/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const registerStore = await RegisterStore.findById(id);
+    res.status(200).json(registerStore);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+//update the register in to the Buyercompany
+
+app.put("/registerStore/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const registerStore = await RegisterStore.findByIdAndUpdate(id, req.body);
+    if (!registerStore) {
+      return res
+        .status(404)
+        .json({ message: `cannot find any Register with ID ${id}` });
+    }
+    const updatedregisterStore = await RegisterStore.findById(id);
+    res.status(200).json(updatedregisterStore);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Delete a register
+
+app.delete("/registerStore/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const registerStore = await RegisterStore.findByIdAndDelete(id);
+    if (!registerStore) {
+      return res
+        .status(404)
+        .json({ message: `cannot find any register Store with ID ${id}` });
+    }
+    res.status(200).json(registerStore);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
 mongoose.set("strictQuery", false);
 mongoose
